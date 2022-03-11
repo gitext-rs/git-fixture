@@ -11,6 +11,7 @@ edition = "2018"
 include = [
   "src/**/*",
   "Cargo.toml",
+  "Cargo.lock",
   "LICENSE*",
   "README.md",
   "examples/**/*"
