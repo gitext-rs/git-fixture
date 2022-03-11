@@ -1,16 +1,10 @@
-[workspace]
-members = [
-    "crates/git-fixture",
-]
-
 [package]
-name = "git-stack"
-description = "Stacked branch management for Git"
-version = "0.6.0"
+name = "git-fixture"
+description = "Reproducible git trees for bug reporting and testing"
+version = "0.2.1"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/epage/git-stack.git"
-documentation = "https://github.com/epage/git-stack.git"
-readme = "README.md"
+repository = "https://github.com/gitext-rs/git-fixture.git"
+documentation = "https://docs.rs/git-fixture"
 categories = ["command-line-interface", "development-tools"]
 keywords = ["git", "cli"]
 edition = "2018"
@@ -28,32 +22,20 @@ pre-release-replacements = [
   {file="CHANGELOG.md", search="\\.\\.\\.HEAD", replace="...{{tag_name}}", exactly=1},
   {file="CHANGELOG.md", search="ReleaseDate", replace="{{date}}", min=1},
   {file="CHANGELOG.md", search="<!-- next-header -->", replace="<!-- next-header -->\n## [Unreleased] - ReleaseDate\n", exactly=1},
-  {file="CHANGELOG.md", search="<!-- next-url -->", replace="<!-- next-url -->\n[Unreleased]: https://github.com/epage/git-stack/compare/{{tag_name}}...HEAD", exactly=1},
+  {file="CHANGELOG.md", search="<!-- next-url -->", replace="<!-- next-url -->\n[Unreleased]: https://github.com/gitext-rs/git-fixture/compare/{{tag_name}}...HEAD", exactly=1},
 ]
 
 [dependencies]
-git2 = { version = "0.14", default-features = false, features = ["vendored-libgit2"] }
-git-config-env = "0.1"
-log = "0.4"
-clap = { version = "3.1", features = ["derive"] }
-clap-verbosity-flag = "1.0"
-proc-exit = "1"
-eyre = "0.6"
-human-panic = "1"
-yansi = "0.5.0"
-concolor = "0.0.8"
-concolor-clap = { version = "0.0.9", features = ["api_unstable"] }
-termtree = "0.2.4"
-env_logger = { version = "0.9", default-features = false, features = ["termcolor"] }
-atty = "0.2"
-humantime = "2"
-itertools = "0.10"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-ignore = "0.4"
-bstr = "0.2"
-maplit = "1"
-
-[dev-dependencies]
-git-fixture = { version = "^0.2", path = "crates/git-fixture" }
-assert_fs = "1"
+humantime = "2"
+humantime-serde = "1"
+bstr = { version = "0.2", features = ["serde1"] }
+derive_more = "0.99.17"
+eyre = "0.6"
+serde_yaml = "0.8.17"
+serde_json = "1.0"
+schemars = { version = "0.8.8", features = ["preserve_order"] }
+toml = "0.5"
+assert_cmd = "2.0"
+clap = { version = "3.1", features = ["derive"] }
+proc-exit = "1.0"
