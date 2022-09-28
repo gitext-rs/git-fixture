@@ -4,18 +4,18 @@ use clap::Parser;
 use proc_exit::WithCodeResultExt;
 
 #[derive(Parser)]
-#[clap(about, author, version)]
-#[clap(group = clap::ArgGroup::new("mode").multiple(false))]
+#[command(about, author, version)]
+#[command(group = clap::ArgGroup::new("mode").multiple(false))]
 struct Args {
-    #[clap(short, long, parse(from_os_str), group = "mode")]
+    #[arg(short, long, group = "mode")]
     input: Option<std::path::PathBuf>,
-    #[clap(short, long, parse(from_os_str))]
+    #[arg(short)]
     output: Option<std::path::PathBuf>,
     /// Sleep between commits
-    #[clap(long, parse(try_from_str))]
+    #[arg(long)]
     sleep: Option<humantime::Duration>,
 
-    #[clap(short, long, parse(from_os_str), group = "mode")]
+    #[arg(short, group = "mode")]
     schema: Option<std::path::PathBuf>,
 }
 
