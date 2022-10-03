@@ -154,7 +154,7 @@ dependencies = [
 
 [[package]]
 name = "git-fixture"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "assert_cmd",
  "bstr 1.0.1",
