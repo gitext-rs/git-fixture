@@ -64,7 +64,7 @@ impl From<Tree> for Command {
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct Tree {
-    pub tracked: std::collections::HashMap<std::path::PathBuf, FileContent>,
+    pub files: std::collections::HashMap<std::path::PathBuf, FileContent>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub message: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]

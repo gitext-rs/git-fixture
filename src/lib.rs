@@ -105,7 +105,7 @@ impl TodoList {
                             .ok()
                             .wrap_err_with(|| format!("Failed to remove {}", relpath.display()))?;
                     }
-                    for (relpath, content) in tree.tracked.iter() {
+                    for (relpath, content) in tree.files.iter() {
                         let path = cwd.join(relpath);
                         if let Some(parent) = path.parent() {
                             std::fs::create_dir_all(parent).wrap_err_with(|| {

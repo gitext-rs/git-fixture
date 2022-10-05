@@ -1,16 +1,16 @@
 init: true
 commands:
 - tree:
-    tracked:
+    files:
       "file_a.txt": "1"
     message: "1"
 - branch: initial
 - tree:
-    tracked:
+    files:
       "file_a.txt": "2"
     message: "2"
 - tree:
-    tracked:
+    files:
       "file_a.txt": "3"
     message: "3"
 - branch: base
@@ -18,24 +18,24 @@ commands:
 
 - reset: base
 - tree:
-    tracked:
+    files:
       "file_a.txt": "3"
       "file_b.txt": "1"
     message: "4"
 - tree:
-    tracked:
+    files:
       "file_a.txt": "3"
       "file_b.txt": "2"
     message: "5"
 - tree:
-    tracked:
+    files:
       "file_a.txt": "3"
       "file_b.txt": "3"
     message: "6"
 - branch: old_master
 # Squashed "feature2" into a single commit and committed it onto master
 - tree:
-    tracked:
+    files:
       "file_a.txt": "3"
       "file_b.txt": "3"
       "file_c.txt": "4"
@@ -44,23 +44,23 @@ commands:
 
 - reset: base
 - tree:
-    tracked:
+    files:
       "file_a.txt": "3"
       "file_c.txt": "1"
     message: "7"
 - branch: feature1
 - tree:
-    tracked:
+    files:
       "file_a.txt": "3"
       "file_c.txt": "2"
     message: "8"
 - tree:
-    tracked:
+    files:
       "file_a.txt": "3"
       "file_c.txt": "3"
     message: "9"
 - tree:
-    tracked:
+    files:
       "file_a.txt": "3"
       "file_c.txt": "4"
     message: "10"

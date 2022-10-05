@@ -139,10 +139,10 @@
     "Tree": {
       "type": "object",
       "required": [
-        "tracked"
+        "files"
       ],
       "properties": {
-        "tracked": {
+        "files": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/FileContent"
