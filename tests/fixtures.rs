@@ -1,44 +1,49 @@
 #[track_caller]
-fn assert_success(path: impl AsRef<std::path::Path>) {
-    let dag = git_fixture::Dag::load(path.as_ref()).unwrap();
+fn assert_success(name: &str) {
+    let path = std::path::PathBuf::from(format!("tests/fixtures/{name}.yml"));
 
-    let sandbox = snapbox::path::PathFixture::mutable_temp().unwrap();
-    dag.run(sandbox.path().unwrap()).unwrap();
+    let dag = git_fixture::Dag::load(&path).unwrap();
 
-    sandbox.close().unwrap();
+    let tmpdir = std::path::Path::new(std::env!("CARGO_TARGET_TMPDIR"));
+    let sandbox = tmpdir.join("test").join("case").join(name);
+    if sandbox.exists() {
+        std::fs::remove_dir_all(&sandbox).unwrap();
+    }
+    std::fs::create_dir_all(&sandbox).unwrap();
+    dag.run(&sandbox).unwrap();
 }
 
 #[test]
 fn branches() {
-    assert_success("tests/fixtures/branches.yml");
+    assert_success("branches");
 }
 
 #[test]
 fn conflict() {
-    assert_success("tests/fixtures/conflict.yml");
+    assert_success("conflict");
 }
 
 #[test]
 fn fixup() {
-    assert_success("tests/fixtures/fixup.yml");
+    assert_success("fixup");
 }
 
 #[test]
 fn git_rebase_existing() {
-    assert_success("tests/fixtures/git_rebase_existing.yml");
+    assert_success("git_rebase_existing");
 }
 
 #[test]
 fn git_rebase_new() {
-    assert_success("tests/fixtures/git_rebase_new.yml");
+    assert_success("git_rebase_new");
 }
 
 #[test]
 fn pr_semi_linear_merge() {
-    assert_success("tests/fixtures/pr-semi-linear-merge.yml");
+    assert_success("pr-semi-linear-merge");
 }
 
 #[test]
 fn pr_squash() {
-    assert_success("tests/fixtures/pr-squash.yml");
+    assert_success("pr-squash");
 }
