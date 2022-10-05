@@ -1,7 +1,5 @@
-use std::io::Write;
-
 use clap::Parser;
-use proc_exit::WithCodeResultExt;
+use proc_exit::prelude::*;
 
 #[derive(Parser)]
 #[command(about, author, version)]
@@ -9,13 +7,13 @@ use proc_exit::WithCodeResultExt;
 struct Args {
     #[arg(short, long, group = "mode")]
     input: Option<std::path::PathBuf>,
-    #[arg(short)]
+    #[arg(short, long)]
     output: Option<std::path::PathBuf>,
     /// Sleep between commits
     #[arg(long)]
     sleep: Option<humantime::Duration>,
 
-    #[arg(short, group = "mode")]
+    #[arg(long, group = "mode")]
     schema: Option<std::path::PathBuf>,
 }
 
@@ -25,6 +23,8 @@ fn main() {
 }
 
 fn run() -> proc_exit::ExitResult {
+    env_logger::init();
+
     let args = Args::parse();
     let output = args
         .output
@@ -32,17 +32,28 @@ fn run() -> proc_exit::ExitResult {
         .unwrap_or_else(|| std::env::current_dir().unwrap());
 
     if let Some(input) = args.input.as_deref() {
-        std::fs::create_dir_all(&output)?;
-        let mut dag = git_fixture::Dag::load(input).with_code(proc_exit::Code::CONFIG_ERR)?;
+        std::fs::create_dir_all(&output).with_code(proc_exit::Code::FAILURE)?;
+        let mut dag = git_fixture::TodoList::load(input).with_code(proc_exit::bash::USAGE)?;
         dag.sleep = dag.sleep.or_else(|| args.sleep.map(|s| s.into()));
         dag.run(&output).with_code(proc_exit::Code::FAILURE)?;
-    } else if let Some(schema_path) = args.schema.as_deref() {
-        let schema = schemars::schema_for!(git_fixture::Dag);
-        let schema = serde_json::to_string_pretty(&schema).unwrap();
-        if schema_path == std::path::Path::new("-") {
-            std::io::stdout().write_all(schema.as_bytes())?;
-        } else {
-            std::fs::write(&schema_path, &schema).with_code(proc_exit::Code::FAILURE)?;
+    } else if let Some(_schema_path) = args.schema.as_deref() {
+        #[cfg(feature = "schema")]
+        {
+            use std::io::Write;
+
+            let schema = schemars::schema_for!(git_fixture::TodoList);
+            let schema = serde_json::to_string_pretty(&schema).unwrap();
+            if _schema_path == std::path::Path::new("-") {
+                std::io::stdout()
+                    .write_all(schema.as_bytes())
+                    .with_code(proc_exit::Code::FAILURE)?;
+            } else {
+                std::fs::write(&_schema_path, &schema).with_code(proc_exit::Code::FAILURE)?;
+            }
+        }
+        #[cfg(not(feature = "schema"))]
+        {
+            return Err(eyre::eyre!("schema is unsupported")).with_code(proc_exit::Code::FAILURE);
         }
     }
     Ok(())

@@ -1,76 +1,82 @@
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
-pub struct Dag {
-    #[serde(default = "init_default")]
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+pub struct TodoList {
+    #[cfg_attr(feature = "serde", serde(default = "init_default"))]
     pub init: bool,
-    #[serde(default)]
-    #[serde(serialize_with = "humantime_serde::serialize")]
-    #[serde(deserialize_with = "humantime_serde::deserialize")]
+    #[cfg_attr(feature = "serde", serde(default))]
+    #[cfg_attr(
+        feature = "serde",
+        serde(serialize_with = "humantime_serde::serialize")
+    )]
+    #[cfg_attr(
+        feature = "serde",
+        serde(deserialize_with = "humantime_serde::deserialize")
+    )]
     pub sleep: Option<std::time::Duration>,
-    #[serde(default)]
-    pub events: Vec<Event>,
-    #[serde(skip)]
-    pub import_root: Option<std::path::PathBuf>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub author: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub commands: Vec<Command>,
 }
 
 fn init_default() -> bool {
     true
 }
 
-impl Default for Dag {
+impl Default for TodoList {
     fn default() -> Self {
         Self {
             init: init_default(),
             sleep: None,
-            events: Vec::new(),
-            import_root: None,
+            author: None,
+            commands: Vec::new(),
         }
     }
 }
 
-#[derive(
-    Clone, Debug, serde::Serialize, serde::Deserialize, derive_more::IsVariant, schemars::JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
-pub enum Event {
-    Import(std::path::PathBuf),
+#[derive(Clone, Debug, derive_more::IsVariant)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+pub enum Command {
+    Label(Label),
+    Reset(Label),
     Tree(Tree),
-    Children(Vec<Vec<Event>>),
-    Head(Reference),
+    Merge(Merge),
+    Branch(Branch),
+    Tag(Tag),
+    Head,
 }
 
-impl From<Tree> for Event {
+impl From<Tree> for Command {
     fn from(tree: Tree) -> Self {
         Self::Tree(tree)
     }
 }
 
-#[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
+#[derive(Default, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct Tree {
-    #[serde(default)]
-    pub tracked: std::collections::HashMap<std::path::PathBuf, FileContent>,
-    #[serde(default)]
-    pub state: TreeState,
-    #[serde(default)]
+    pub files: std::collections::HashMap<std::path::PathBuf, FileContent>,
+    #[cfg_attr(feature = "serde", serde(default))]
     pub message: Option<String>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub author: Option<String>,
-    #[serde(default)]
-    pub branch: Option<Branch>,
-    #[serde(default)]
-    pub mark: Option<Mark>,
 }
 
-#[derive(
-    Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema, derive_more::IsVariant,
-)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, derive_more::IsVariant)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(untagged))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub enum FileContent {
     Binary(Vec<u8>),
     Text(String),
@@ -103,72 +109,26 @@ impl<'d> From<&'d str> for FileContent {
     }
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct Merge {
-    pub base: Vec<Reference>,
-    #[serde(default)]
-    pub branch: Option<Branch>,
-    #[serde(default)]
-    pub mark: Option<Mark>,
+    pub base: Vec<Label>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub message: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub author: Option<String>,
 }
 
-#[derive(
-    Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema, derive_more::IsVariant,
-)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
-pub enum TreeState {
-    Committed,
-    Staged,
-    Tracked,
-}
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(transparent))]
+pub struct Label(String);
 
-impl Default for TreeState {
-    fn default() -> Self {
-        Self::Committed
-    }
-}
-
-#[derive(
-    Clone, Debug, serde::Serialize, serde::Deserialize, derive_more::IsVariant, schemars::JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
-pub enum Reference {
-    Branch(Branch),
-    Mark(Mark),
-}
-
-impl From<Branch> for Reference {
-    fn from(inner: Branch) -> Self {
-        Self::Branch(inner)
-    }
-}
-
-impl From<Mark> for Reference {
-    fn from(inner: Mark) -> Self {
-        Self::Mark(inner)
-    }
-}
-
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-)]
-#[serde(transparent)]
-pub struct Mark(String);
-
-impl Mark {
+impl Label {
     pub fn new(name: &str) -> Self {
         Self(name.to_owned())
     }
@@ -178,19 +138,19 @@ impl Mark {
     }
 }
 
-impl From<String> for Mark {
+impl From<String> for Label {
     fn from(other: String) -> Self {
         Self(other)
     }
 }
 
-impl<'s> From<&'s str> for Mark {
+impl<'s> From<&'s str> for Label {
     fn from(other: &'s str) -> Self {
         Self(other.to_owned())
     }
 }
 
-impl std::ops::Deref for Mark {
+impl std::ops::Deref for Label {
     type Target = str;
 
     #[inline]
@@ -199,26 +159,23 @@ impl std::ops::Deref for Mark {
     }
 }
 
-impl std::borrow::Borrow<str> for Mark {
+impl std::borrow::Borrow<str> for Label {
     #[inline]
     fn borrow(&self) -> &str {
         self.as_str()
     }
 }
 
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-)]
-#[serde(transparent)]
+impl std::fmt::Display for Label {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.as_str().fmt(f)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Branch(String);
 
 impl Branch {
@@ -256,5 +213,61 @@ impl std::borrow::Borrow<str> for Branch {
     #[inline]
     fn borrow(&self) -> &str {
         self.as_str()
+    }
+}
+
+impl std::fmt::Display for Branch {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.as_str().fmt(f)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(transparent))]
+pub struct Tag(String);
+
+impl Tag {
+    pub fn new(name: &str) -> Self {
+        Self(name.to_owned())
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl From<String> for Tag {
+    fn from(other: String) -> Self {
+        Self(other)
+    }
+}
+
+impl<'s> From<&'s str> for Tag {
+    fn from(other: &'s str) -> Self {
+        Self(other.to_owned())
+    }
+}
+
+impl std::ops::Deref for Tag {
+    type Target = str;
+
+    #[inline]
+    fn deref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl std::borrow::Borrow<str> for Tag {
+    #[inline]
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl std::fmt::Display for Tag {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.as_str().fmt(f)
     }
 }

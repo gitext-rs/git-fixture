@@ -8,7 +8,7 @@ documentation = "https://docs.rs/git-fixture"
 categories = ["command-line-interface", "development-tools"]
 keywords = ["git", "cli"]
 edition = "2021"
-rust-version = "1.60.0"  # MSRV
+rust-version = "1.61.0"  # MSRV
 include = [
   "src/**/*",
   "Cargo.toml",
@@ -27,17 +27,35 @@ pre-release-replacements = [
   {file="CHANGELOG.md", search="<!-- next-url -->", replace="<!-- next-url -->\n[Unreleased]: https://github.com/gitext-rs/git-fixture/compare/{{tag_name}}...HEAD", exactly=1},
 ]
 
+[features]
+cli = ["dep:clap", "dep:proc-exit", "dep:humantime", "dep:env_logger"]
+serde = ["dep:serde", "dep:humantime", "dep:humantime-serde"]
+schema = ["dep:schemars", "json", "serde"]
+yaml = ["dep:serde_yaml", "serde"]
+json = ["dep:serde_json", "serde"]
+toml = ["dep:toml", "serde"]
+
+[[bin]]
+name = "git-fixture"
+required-features = ["cli", "yaml", "json", "toml", "schema"]
+
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-humantime = "2"
-humantime-serde = "1"
+serde = { version = "1", features = ["derive"], optional = true }
+serde_yaml = { version = "0.8.17", optional = true }
+serde_json = { version = "1.0", optional = true }
+toml = { version = "0.5", optional = true }
+humantime = { version = "2", optional = true }
+humantime-serde = { version = "1", optional = true }
 bstr = { version = "1.0", features = ["serde"] }
 derive_more = "0.99.17"
 eyre = "0.6"
-serde_yaml = "0.8.17"
-serde_json = "1.0"
-schemars = { version = "0.8.11", features = ["preserve_order"] }
-toml = "0.5"
-assert_cmd = "2.0"
-clap = { version = "4.0", features = ["derive"] }
-proc-exit = "1.0"
+schemars = { version = "0.8.11", features = ["preserve_order"], optional = true }
+clap = { version = "4.0", features = ["derive"], optional = true }
+proc-exit = { version = "2.0", optional = true }
+env_logger = { version = "0.9.1", optional = true }
+git2 = { version = "0.15.0", default-features = false, features = ["vendored-libgit2"] }
+log = "0.4.17"
+
+[dev-dependencies]
+env_logger = "0.9.1"
+snapbox = { version = "0.4.0", features = ["path"] }
