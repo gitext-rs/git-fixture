@@ -7,13 +7,13 @@ use proc_exit::WithCodeResultExt;
 struct Args {
     #[arg(short, long, group = "mode")]
     input: Option<std::path::PathBuf>,
-    #[arg(short)]
+    #[arg(short, long)]
     output: Option<std::path::PathBuf>,
     /// Sleep between commits
     #[arg(long)]
     sleep: Option<humantime::Duration>,
 
-    #[arg(short, group = "mode")]
+    #[arg(long, group = "mode")]
     schema: Option<std::path::PathBuf>,
 }
 
