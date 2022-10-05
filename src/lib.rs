@@ -60,21 +60,25 @@ impl Dag {
                 .wrap_err("'git init' failed")?;
         }
 
-        let mut marks: std::collections::HashMap<String, String> = Default::default();
-        self.run_events(&self.events, cwd, &mut marks)?;
-
-        Ok(())
-    }
-
-    // Note: shelling out to git to minimize programming bugs
-    fn run_events(
-        &self,
-        events: &[Event],
-        cwd: &std::path::Path,
-        marks: &mut std::collections::HashMap<String, String>,
-    ) -> eyre::Result<()> {
-        for event in events.iter() {
+        let mut head = None;
+        let mut labels: std::collections::HashMap<Label, String> = Default::default();
+        for event in self.events.iter() {
             match event {
+                Event::Label(label) => {
+                    let commit = current_oid(cwd)?;
+                    labels.insert(label.clone(), commit);
+                }
+                Event::Reset(reference) => {
+                    let revspec = match &reference {
+                        Reference::Label(label) => labels
+                            .get(label.as_str())
+                            .ok_or_else(|| eyre::eyre!("Reference doesn't exist: {:?}", label))?
+                            .as_str(),
+                        Reference::Tag(tag) => tag.as_str(),
+                        Reference::Branch(branch) => branch.as_str(),
+                    };
+                    checkout(cwd, revspec)?;
+                }
                 Event::Tree(tree) => {
                     let output = std::process::Command::new("git")
                         .arg("ls-files")
@@ -99,72 +103,91 @@ impl Dag {
                         }
                         std::fs::write(&path, content.as_bytes())
                             .wrap_err_with(|| format!("Failed to write {}", path.display()))?;
-                        if !tree.state.is_tracked() {
-                            std::process::Command::new("git")
-                                .arg("add")
-                                .arg(relpath)
-                                .current_dir(cwd)
-                                .ok()?;
-                        }
+                        std::process::Command::new("git")
+                            .arg("add")
+                            .arg(relpath)
+                            .current_dir(cwd)
+                            .ok()?;
                     }
-                    if tree.state.is_committed() {
-                        // Detach
-                        if let Ok(pre_commit) = current_oid(cwd) {
-                            checkout(cwd, &pre_commit)?;
-                        }
+                    // Detach
+                    if let Ok(pre_commit) = current_oid(cwd) {
+                        checkout(cwd, &pre_commit)?;
+                    }
 
-                        let mut p = std::process::Command::new("git");
-                        p.arg("commit")
-                            .arg("-m")
-                            .arg(tree.message.as_deref().unwrap_or("Automated"))
-                            .current_dir(cwd);
-                        if let Some(author) = tree.author.as_deref() {
-                            p.arg("--author").arg(author);
-                        }
-                        p.ok()?;
-                        if let Some(sleep) = self.sleep {
-                            std::thread::sleep(sleep);
-                        }
-
-                        if let Some(branch) = tree.branch.as_ref() {
-                            let _ = std::process::Command::new("git")
-                                .arg("branch")
-                                .arg("-D")
-                                .arg(branch.as_str())
-                                .current_dir(cwd)
-                                .ok();
-                            std::process::Command::new("git")
-                                .arg("checkout")
-                                .arg("-b")
-                                .arg(branch.as_str())
-                                .current_dir(cwd)
-                                .ok()?;
-                        }
-
-                        if let Some(mark) = tree.mark.as_ref() {
-                            let commit = current_oid(cwd)?;
-                            marks.insert(mark.as_str().to_owned(), commit);
-                        }
+                    let mut p = std::process::Command::new("git");
+                    p.arg("commit")
+                        .arg("-m")
+                        .arg(tree.message.as_deref().unwrap_or("Automated"))
+                        .current_dir(cwd);
+                    if let Some(author) = tree.author.as_deref() {
+                        p.arg("--author").arg(author);
+                    }
+                    p.ok()?;
+                    if let Some(sleep) = self.sleep {
+                        std::thread::sleep(sleep);
                     }
                 }
-                Event::Children(events) => {
-                    let start_commit = current_oid(cwd)?;
-                    for run in events {
-                        checkout(cwd, &start_commit)?;
-                        self.run_events(run, cwd, marks)?;
+                Event::Merge(merge) => {
+                    let mut p = std::process::Command::new("git");
+                    p.arg("merge")
+                        .arg(merge.message.as_deref().unwrap_or("Automated"))
+                        .current_dir(cwd);
+                    if let Some(author) = merge.author.as_deref() {
+                        p.arg("--author").arg(author);
+                    }
+                    for base in &merge.base {
+                        let revspec = match base {
+                            Reference::Label(label) => labels
+                                .get(label.as_str())
+                                .ok_or_else(|| eyre::eyre!("Reference doesn't exist: {:?}", label))?
+                                .as_str(),
+                            Reference::Tag(tag) => tag.as_str(),
+                            Reference::Branch(branch) => branch.as_str(),
+                        };
+                        p.arg(revspec);
+                    }
+                    p.ok()?;
+                    if let Some(sleep) = self.sleep {
+                        std::thread::sleep(sleep);
                     }
                 }
-                Event::Head(reference) => {
-                    let revspec = match &reference {
-                        Reference::Mark(mark) => marks
-                            .get(mark.as_str())
-                            .ok_or_else(|| eyre::eyre!("Reference doesn't exist: {:?}", mark))?
-                            .as_str(),
-                        Reference::Branch(branch) => branch.as_str(),
-                    };
-                    checkout(cwd, revspec)?;
+                Event::Branch(branch) => {
+                    let _ = std::process::Command::new("git")
+                        .arg("branch")
+                        .arg("-D")
+                        .arg(branch.as_str())
+                        .current_dir(cwd)
+                        .ok();
+                    std::process::Command::new("git")
+                        .arg("checkout")
+                        .arg("-b")
+                        .arg(branch.as_str())
+                        .current_dir(cwd)
+                        .ok()?;
+                }
+                Event::Tag(tag) => {
+                    let _ = std::process::Command::new("git")
+                        .arg("tag")
+                        .arg("-d")
+                        .arg(tag.as_str())
+                        .current_dir(cwd)
+                        .ok();
+                    std::process::Command::new("git")
+                        .arg("tag")
+                        .arg("-a")
+                        .arg(tag.as_str())
+                        .current_dir(cwd)
+                        .ok()?;
+                }
+                Event::Head => {
+                    let commit = current_oid(cwd)?;
+                    head = Some(commit);
                 }
             }
+        }
+
+        if let Some(head) = head {
+            checkout(cwd, &head)?;
         }
 
         Ok(())

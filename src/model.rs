@@ -32,9 +32,13 @@ impl Default for Dag {
 #[serde(rename_all = "snake_case")]
 #[serde(deny_unknown_fields)]
 pub enum Event {
+    Label(Label),
+    Reset(Reference),
     Tree(Tree),
-    Children(Vec<Vec<Event>>),
-    Head(Reference),
+    Merge(Merge),
+    Branch(Branch),
+    Tag(Tag),
+    Head,
 }
 
 impl From<Tree> for Event {
@@ -47,18 +51,11 @@ impl From<Tree> for Event {
 #[serde(rename_all = "snake_case")]
 #[serde(deny_unknown_fields)]
 pub struct Tree {
-    #[serde(default)]
     pub tracked: std::collections::HashMap<std::path::PathBuf, FileContent>,
-    #[serde(default)]
-    pub state: TreeState,
     #[serde(default)]
     pub message: Option<String>,
     #[serde(default)]
     pub author: Option<String>,
-    #[serde(default)]
-    pub branch: Option<Branch>,
-    #[serde(default)]
-    pub mark: Option<Mark>,
 }
 
 #[derive(
@@ -105,26 +102,9 @@ impl<'d> From<&'d str> for FileContent {
 pub struct Merge {
     pub base: Vec<Reference>,
     #[serde(default)]
-    pub branch: Option<Branch>,
+    pub message: Option<String>,
     #[serde(default)]
-    pub mark: Option<Mark>,
-}
-
-#[derive(
-    Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema, derive_more::IsVariant,
-)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
-pub enum TreeState {
-    Committed,
-    Staged,
-    Tracked,
-}
-
-impl Default for TreeState {
-    fn default() -> Self {
-        Self::Committed
-    }
+    pub author: Option<String>,
 }
 
 #[derive(
@@ -134,7 +114,8 @@ impl Default for TreeState {
 #[serde(deny_unknown_fields)]
 pub enum Reference {
     Branch(Branch),
-    Mark(Mark),
+    Tag(Tag),
+    Label(Label),
 }
 
 impl From<Branch> for Reference {
@@ -143,9 +124,15 @@ impl From<Branch> for Reference {
     }
 }
 
-impl From<Mark> for Reference {
-    fn from(inner: Mark) -> Self {
-        Self::Mark(inner)
+impl From<Tag> for Reference {
+    fn from(inner: Tag) -> Self {
+        Self::Tag(inner)
+    }
+}
+
+impl From<Label> for Reference {
+    fn from(inner: Label) -> Self {
+        Self::Label(inner)
     }
 }
 
@@ -162,9 +149,9 @@ impl From<Mark> for Reference {
     schemars::JsonSchema,
 )]
 #[serde(transparent)]
-pub struct Mark(String);
+pub struct Label(String);
 
-impl Mark {
+impl Label {
     pub fn new(name: &str) -> Self {
         Self(name.to_owned())
     }
@@ -174,19 +161,19 @@ impl Mark {
     }
 }
 
-impl From<String> for Mark {
+impl From<String> for Label {
     fn from(other: String) -> Self {
         Self(other)
     }
 }
 
-impl<'s> From<&'s str> for Mark {
+impl<'s> From<&'s str> for Label {
     fn from(other: &'s str) -> Self {
         Self(other.to_owned())
     }
 }
 
-impl std::ops::Deref for Mark {
+impl std::ops::Deref for Label {
     type Target = str;
 
     #[inline]
@@ -195,7 +182,7 @@ impl std::ops::Deref for Mark {
     }
 }
 
-impl std::borrow::Borrow<str> for Mark {
+impl std::borrow::Borrow<str> for Label {
     #[inline]
     fn borrow(&self) -> &str {
         self.as_str()
@@ -249,6 +236,59 @@ impl std::ops::Deref for Branch {
 }
 
 impl std::borrow::Borrow<str> for Branch {
+    #[inline]
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
+}
+
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+)]
+#[serde(transparent)]
+pub struct Tag(String);
+
+impl Tag {
+    pub fn new(name: &str) -> Self {
+        Self(name.to_owned())
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl From<String> for Tag {
+    fn from(other: String) -> Self {
+        Self(other)
+    }
+}
+
+impl<'s> From<&'s str> for Tag {
+    fn from(other: &'s str) -> Self {
+        Self(other.to_owned())
+    }
+}
+
+impl std::ops::Deref for Tag {
+    type Target = str;
+
+    #[inline]
+    fn deref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl std::borrow::Borrow<str> for Tag {
     #[inline]
     fn borrow(&self) -> &str {
         self.as_str()
