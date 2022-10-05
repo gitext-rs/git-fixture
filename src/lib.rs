@@ -212,15 +212,22 @@ impl TodoList {
                     repo.tag(tag.as_str(), commit.as_object(), &sig, &message, true)?;
                 }
                 Command::Head => {
-                    let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
-                    log::trace!("exec git checkout {}", current_oid);
-                    head = Some(AnnotatedOid::Commit(current_oid));
+                    let new_head = if let Some(branch) = self.last_branch(i) {
+                        AnnotatedOid::Branch(branch)
+                    } else {
+                        let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
+                        AnnotatedOid::Commit(current_oid)
+                    };
+                    log::trace!("exec git checkout {}", new_head);
+                    head = Some(new_head);
                 }
             }
         }
 
         let head = if let Some(head) = head {
             head
+        } else if let Some(branch) = self.last_branch(self.commands.len()) {
+            AnnotatedOid::Branch(branch)
         } else {
             let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
             AnnotatedOid::Commit(current_oid)
@@ -230,18 +237,36 @@ impl TodoList {
                 repo.set_head_detached(head)?;
             }
             AnnotatedOid::Branch(head) => {
-                repo.set_head(&head)?;
+                let branch = repo.find_branch(&head, git2::BranchType::Local)?;
+                repo.set_head(branch.get().name().unwrap())?;
             }
         }
         repo.checkout_head(None)?;
 
         Ok(())
     }
+
+    fn last_branch(&self, current_index: usize) -> Option<String> {
+        if let Some(Command::Branch(prev)) = self.commands.get(current_index.saturating_sub(1)) {
+            Some(prev.as_str().to_owned())
+        } else {
+            None
+        }
+    }
 }
 
-pub enum AnnotatedOid {
+enum AnnotatedOid {
     Commit(git2::Oid),
     Branch(String),
+}
+
+impl std::fmt::Display for AnnotatedOid {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Commit(ann) => ann.fmt(f),
+            Self::Branch(ann) => ann.fmt(f),
+        }
+    }
 }
 
 #[cfg(unix)]
