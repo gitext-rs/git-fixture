@@ -13,7 +13,7 @@ impl TodoList {
                 let data = std::fs::read_to_string(path)
                     .wrap_err_with(|| format!("Could not read {}", path.display()))?;
 
-                serde_yaml::from_str(&data)
+                Self::parse_yaml(&data)
                     .wrap_err_with(|| format!("Could not parse {}", path.display()))
             }
             #[cfg(feature = "json")]
@@ -21,7 +21,7 @@ impl TodoList {
                 let data = std::fs::read_to_string(path)
                     .wrap_err_with(|| format!("Could not read {}", path.display()))?;
 
-                serde_json::from_str(&data)
+                Self::parse_json(&data)
                     .wrap_err_with(|| format!("Could not parse {}", path.display()))
             }
             #[cfg(feature = "toml")]
@@ -29,7 +29,7 @@ impl TodoList {
                 let data = std::fs::read_to_string(path)
                     .wrap_err_with(|| format!("Could not read {}", path.display()))?;
 
-                toml::from_str(&data)
+                Self::parse_toml(&data)
                     .wrap_err_with(|| format!("Could not parse {}", path.display()))
             }
             Some(other) => Err(eyre::eyre!("Unknown extension: {:?}", other)),
@@ -41,21 +41,24 @@ impl TodoList {
         match path.extension().and_then(std::ffi::OsStr::to_str) {
             #[cfg(feature = "yaml")]
             Some("yaml") | Some("yml") => {
-                let raw = serde_yaml::to_string(self)
+                let raw = self
+                    .to_yaml()
                     .wrap_err_with(|| format!("Could not parse {}", path.display()))?;
                 std::fs::write(path, &raw)
                     .wrap_err_with(|| format!("Could not write {}", path.display()))
             }
             #[cfg(feature = "json")]
             Some("json") => {
-                let raw = serde_json::to_string(self)
+                let raw = self
+                    .to_json()
                     .wrap_err_with(|| format!("Could not parse {}", path.display()))?;
                 std::fs::write(path, &raw)
                     .wrap_err_with(|| format!("Could not write {}", path.display()))
             }
             #[cfg(feature = "toml")]
             Some("toml") => {
-                let raw = toml::to_string(self)
+                let raw = self
+                    .to_toml()
                     .wrap_err_with(|| format!("Could not parse {}", path.display()))?;
                 std::fs::write(path, &raw)
                     .wrap_err_with(|| format!("Could not write {}", path.display()))
@@ -65,6 +68,38 @@ impl TodoList {
         }
     }
 
+    #[cfg(feature = "yaml")]
+    pub fn parse_yaml(data: &str) -> eyre::Result<Self> {
+        serde_yaml::from_str(data).map_err(|err| err.into())
+    }
+
+    #[cfg(feature = "json")]
+    pub fn parse_json(data: &str) -> eyre::Result<Self> {
+        serde_json::from_str(data).map_err(|err| err.into())
+    }
+
+    #[cfg(feature = "toml")]
+    pub fn parse_toml(data: &str) -> eyre::Result<Self> {
+        toml::from_str(data).map_err(|err| err.into())
+    }
+
+    #[cfg(feature = "yaml")]
+    pub fn to_yaml(&self) -> eyre::Result<String> {
+        serde_yaml::to_string(self).map_err(|err| err.into())
+    }
+
+    #[cfg(feature = "json")]
+    pub fn to_json(&self) -> eyre::Result<String> {
+        serde_json::to_string(self).map_err(|err| err.into())
+    }
+
+    #[cfg(feature = "toml")]
+    pub fn to_toml(&self) -> eyre::Result<String> {
+        toml::to_string(self).map_err(|err| err.into())
+    }
+}
+
+impl TodoList {
     pub fn run(self, cwd: &std::path::Path) -> eyre::Result<()> {
         let repo = if self.init {
             git2::Repository::init(cwd)?
