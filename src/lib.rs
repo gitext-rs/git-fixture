@@ -11,7 +11,7 @@ impl Dag {
         let data = std::fs::read_to_string(path)
             .wrap_err_with(|| format!("Could not read {}", path.display()))?;
 
-        let mut dag: Self = match path.extension().and_then(std::ffi::OsStr::to_str) {
+        let dag: Self = match path.extension().and_then(std::ffi::OsStr::to_str) {
             Some("yaml") | Some("yml") => serde_yaml::from_str(&data)
                 .wrap_err_with(|| format!("Could not parse {}", path.display()))?,
             Some("json") => serde_json::from_str(&data)
@@ -25,12 +25,6 @@ impl Dag {
                 return Err(eyre::eyre!("No extension for {}", path.display()));
             }
         };
-
-        dag.import_root = Some(
-            path.parent()
-                .unwrap_or_else(|| std::path::Path::new(""))
-                .to_owned(),
-        );
 
         Ok(dag)
     }
@@ -67,14 +61,7 @@ impl Dag {
         }
 
         let mut marks: std::collections::HashMap<String, String> = Default::default();
-        self.run_events(
-            &self.events,
-            cwd,
-            self.import_root
-                .as_deref()
-                .unwrap_or_else(|| std::path::Path::new("")),
-            &mut marks,
-        )?;
+        self.run_events(&self.events, cwd, &mut marks)?;
 
         Ok(())
     }
@@ -84,20 +71,10 @@ impl Dag {
         &self,
         events: &[Event],
         cwd: &std::path::Path,
-        import_root: &std::path::Path,
         marks: &mut std::collections::HashMap<String, String>,
     ) -> eyre::Result<()> {
         for event in events.iter() {
             match event {
-                Event::Import(path) => {
-                    let path = import_root.join(path);
-                    let mut child_dag = Dag::load(&path)?;
-                    child_dag.init = false;
-                    child_dag.sleep = child_dag.sleep.or(self.sleep);
-                    child_dag.run(cwd).wrap_err_with(|| {
-                        format!("Failed when running imported fixcture {}", path.display())
-                    })?;
-                }
                 Event::Tree(tree) => {
                     let output = std::process::Command::new("git")
                         .arg("ls-files")
@@ -174,7 +151,7 @@ impl Dag {
                     let start_commit = current_oid(cwd)?;
                     for run in events {
                         checkout(cwd, &start_commit)?;
-                        self.run_events(run, cwd, import_root, marks)?;
+                        self.run_events(run, cwd, marks)?;
                     }
                 }
                 Event::Head(reference) => {

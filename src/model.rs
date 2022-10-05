@@ -10,8 +10,6 @@ pub struct Dag {
     pub sleep: Option<std::time::Duration>,
     #[serde(default)]
     pub events: Vec<Event>,
-    #[serde(skip)]
-    pub import_root: Option<std::path::PathBuf>,
 }
 
 fn init_default() -> bool {
@@ -24,7 +22,6 @@ impl Default for Dag {
             init: init_default(),
             sleep: None,
             events: Vec::new(),
-            import_root: None,
         }
     }
 }
@@ -35,7 +32,6 @@ impl Default for Dag {
 #[serde(rename_all = "snake_case")]
 #[serde(deny_unknown_fields)]
 pub enum Event {
-    Import(std::path::PathBuf),
     Tree(Tree),
     Children(Vec<Vec<Event>>),
     Head(Reference),
