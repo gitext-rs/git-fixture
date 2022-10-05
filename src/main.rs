@@ -1,5 +1,5 @@
 use clap::Parser;
-use proc_exit::WithCodeResultExt;
+use proc_exit::prelude::*;
 
 #[derive(Parser)]
 #[command(about, author, version)]
@@ -32,8 +32,8 @@ fn run() -> proc_exit::ExitResult {
         .unwrap_or_else(|| std::env::current_dir().unwrap());
 
     if let Some(input) = args.input.as_deref() {
-        std::fs::create_dir_all(&output)?;
-        let mut dag = git_fixture::TodoList::load(input).with_code(proc_exit::Code::CONFIG_ERR)?;
+        std::fs::create_dir_all(&output).with_code(proc_exit::Code::FAILURE)?;
+        let mut dag = git_fixture::TodoList::load(input).with_code(proc_exit::bash::USAGE)?;
         dag.sleep = dag.sleep.or_else(|| args.sleep.map(|s| s.into()));
         dag.run(&output).with_code(proc_exit::Code::FAILURE)?;
     } else if let Some(_schema_path) = args.schema.as_deref() {
@@ -44,7 +44,9 @@ fn run() -> proc_exit::ExitResult {
             let schema = schemars::schema_for!(git_fixture::TodoList);
             let schema = serde_json::to_string_pretty(&schema).unwrap();
             if _schema_path == std::path::Path::new("-") {
-                std::io::stdout().write_all(schema.as_bytes())?;
+                std::io::stdout()
+                    .write_all(schema.as_bytes())
+                    .with_code(proc_exit::Code::FAILURE)?;
             } else {
                 std::fs::write(&_schema_path, &schema).with_code(proc_exit::Code::FAILURE)?;
             }
