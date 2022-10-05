@@ -11,7 +11,7 @@ pub struct Dag {
     #[serde(default)]
     pub author: Option<String>,
     #[serde(default)]
-    pub events: Vec<Event>,
+    pub commands: Vec<Command>,
 }
 
 fn init_default() -> bool {
@@ -24,7 +24,7 @@ impl Default for Dag {
             init: init_default(),
             sleep: None,
             author: None,
-            events: Vec::new(),
+            commands: Vec::new(),
         }
     }
 }
@@ -34,7 +34,7 @@ impl Default for Dag {
 )]
 #[serde(rename_all = "snake_case")]
 #[serde(deny_unknown_fields)]
-pub enum Event {
+pub enum Command {
     Label(Label),
     Reset(Reference),
     Tree(Tree),
@@ -44,7 +44,7 @@ pub enum Event {
     Head,
 }
 
-impl From<Tree> for Event {
+impl From<Tree> for Command {
     fn from(tree: Tree) -> Self {
         Self::Tree(tree)
     }

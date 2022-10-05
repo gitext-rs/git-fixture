@@ -62,13 +62,13 @@ impl Dag {
 
         let mut head = None;
         let mut labels: std::collections::HashMap<Label, String> = Default::default();
-        for event in self.events.iter() {
+        for event in self.commands.iter() {
             match event {
-                Event::Label(label) => {
+                Command::Label(label) => {
                     let commit = current_oid(cwd)?;
                     labels.insert(label.clone(), commit);
                 }
-                Event::Reset(reference) => {
+                Command::Reset(reference) => {
                     let revspec = match &reference {
                         Reference::Label(label) => labels
                             .get(label.as_str())
@@ -79,7 +79,7 @@ impl Dag {
                     };
                     checkout(cwd, revspec)?;
                 }
-                Event::Tree(tree) => {
+                Command::Tree(tree) => {
                     let output = std::process::Command::new("git")
                         .arg("ls-files")
                         .current_dir(cwd)
@@ -128,7 +128,7 @@ impl Dag {
                         std::thread::sleep(sleep);
                     }
                 }
-                Event::Merge(merge) => {
+                Command::Merge(merge) => {
                     let mut p = std::process::Command::new("git");
                     p.arg("merge")
                         .arg(merge.message.as_deref().unwrap_or("Automated"))
@@ -153,7 +153,7 @@ impl Dag {
                         std::thread::sleep(sleep);
                     }
                 }
-                Event::Branch(branch) => {
+                Command::Branch(branch) => {
                     let _ = std::process::Command::new("git")
                         .arg("branch")
                         .arg("-D")
@@ -167,7 +167,7 @@ impl Dag {
                         .current_dir(cwd)
                         .ok()?;
                 }
-                Event::Tag(tag) => {
+                Command::Tag(tag) => {
                     let _ = std::process::Command::new("git")
                         .arg("tag")
                         .arg("-d")
@@ -181,7 +181,7 @@ impl Dag {
                         .current_dir(cwd)
                         .ok()?;
                 }
-                Event::Head => {
+                Command::Head => {
                     let commit = current_oid(cwd)?;
                     head = Some(commit);
                 }

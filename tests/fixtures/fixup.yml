@@ -1,5 +1,5 @@
 init: true
-events:
+commands:
 - tree:
     tracked:
       "file_a.txt": "3"
