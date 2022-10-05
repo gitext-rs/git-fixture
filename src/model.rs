@@ -9,6 +9,8 @@ pub struct Dag {
     #[serde(deserialize_with = "humantime_serde::deserialize")]
     pub sleep: Option<std::time::Duration>,
     #[serde(default)]
+    pub author: Option<String>,
+    #[serde(default)]
     pub events: Vec<Event>,
 }
 
@@ -21,6 +23,7 @@ impl Default for Dag {
         Self {
             init: init_default(),
             sleep: None,
+            author: None,
             events: Vec::new(),
         }
     }

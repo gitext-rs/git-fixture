@@ -119,7 +119,8 @@ impl Dag {
                         .arg("-m")
                         .arg(tree.message.as_deref().unwrap_or("Automated"))
                         .current_dir(cwd);
-                    if let Some(author) = tree.author.as_deref() {
+                    if let Some(author) = tree.author.as_deref().or_else(|| self.author.as_deref())
+                    {
                         p.arg("--author").arg(author);
                     }
                     p.ok()?;
@@ -132,7 +133,8 @@ impl Dag {
                     p.arg("merge")
                         .arg(merge.message.as_deref().unwrap_or("Automated"))
                         .current_dir(cwd);
-                    if let Some(author) = merge.author.as_deref() {
+                    if let Some(author) = merge.author.as_deref().or_else(|| self.author.as_deref())
+                    {
                         p.arg("--author").arg(author);
                     }
                     for base in &merge.base {
