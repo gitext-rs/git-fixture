@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.3.0] - 2022-10-05
+
 ## [0.2.7] - 2022-10-03
 
 ## [0.2.6] - 2022-09-30
@@ -26,7 +28,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.0] - 2021-08-17
 
 <!-- next-url -->
-[Unreleased]: https://github.com/gitext-rs/git-fixture/compare/v0.2.7...HEAD
+[Unreleased]: https://github.com/gitext-rs/git-fixture/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/gitext-rs/git-fixture/compare/v0.2.7...v0.3.0
 [0.2.7]: https://github.com/gitext-rs/git-fixture/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/gitext-rs/git-fixture/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/gitext-rs/git-fixture/compare/v0.2.4...v0.2.5
