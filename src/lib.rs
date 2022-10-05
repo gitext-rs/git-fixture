@@ -83,15 +83,11 @@ impl TodoList {
                     let commit = current_oid(cwd)?;
                     labels.insert(label.clone(), commit);
                 }
-                Command::Reset(reference) => {
-                    let revspec = match &reference {
-                        Reference::Label(label) => labels
-                            .get(label.as_str())
-                            .ok_or_else(|| eyre::eyre!("Reference doesn't exist: {:?}", label))?
-                            .as_str(),
-                        Reference::Tag(tag) => tag.as_str(),
-                        Reference::Branch(branch) => branch.as_str(),
-                    };
+                Command::Reset(label) => {
+                    let revspec = labels
+                        .get(label.as_str())
+                        .ok_or_else(|| eyre::eyre!("Label doesn't exist: {:?}", label))?
+                        .as_str();
                     checkout(cwd, revspec)?;
                 }
                 Command::Tree(tree) => {
@@ -153,14 +149,10 @@ impl TodoList {
                         p.arg("--author").arg(author);
                     }
                     for base in &merge.base {
-                        let revspec = match base {
-                            Reference::Label(label) => labels
-                                .get(label.as_str())
-                                .ok_or_else(|| eyre::eyre!("Reference doesn't exist: {:?}", label))?
-                                .as_str(),
-                            Reference::Tag(tag) => tag.as_str(),
-                            Reference::Branch(branch) => branch.as_str(),
-                        };
+                        let revspec = labels
+                            .get(base.as_str())
+                            .ok_or_else(|| eyre::eyre!("Label doesn't exist: {:?}", base))?
+                            .as_str();
                         p.arg(revspec);
                     }
                     p.ok()?;

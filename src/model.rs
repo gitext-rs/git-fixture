@@ -44,7 +44,7 @@ impl Default for TodoList {
 #[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub enum Command {
     Label(Label),
-    Reset(Reference),
+    Reset(Label),
     Tree(Tree),
     Merge(Merge),
     Branch(Branch),
@@ -115,40 +115,11 @@ impl<'d> From<&'d str> for FileContent {
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct Merge {
-    pub base: Vec<Reference>,
+    pub base: Vec<Label>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub message: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub author: Option<String>,
-}
-
-#[derive(Clone, Debug, derive_more::IsVariant)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
-#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
-pub enum Reference {
-    Branch(Branch),
-    Tag(Tag),
-    Label(Label),
-}
-
-impl From<Branch> for Reference {
-    fn from(inner: Branch) -> Self {
-        Self::Branch(inner)
-    }
-}
-
-impl From<Tag> for Reference {
-    fn from(inner: Tag) -> Self {
-        Self::Tag(inner)
-    }
-}
-
-impl From<Label> for Reference {
-    fn from(inner: Label) -> Self {
-        Self::Label(inner)
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

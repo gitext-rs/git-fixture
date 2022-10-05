@@ -16,8 +16,7 @@ commands:
 - branch: base
 - label: base
 
-- reset:
-    label: base
+- reset: base
 - tree:
     tracked:
       "file_a.txt": "4"
@@ -28,8 +27,7 @@ commands:
     message: "5"
 - branch: master
 
-- reset:
-    label: base
+- reset: base
 - tree:
     tracked:
       "file_a.txt": "6"

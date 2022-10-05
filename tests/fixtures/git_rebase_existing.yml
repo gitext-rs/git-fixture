@@ -16,8 +16,7 @@ commands:
 - branch: master
 - label: master
 
-- reset:
-    label: master
+- reset: master
 - tree:
     tracked:
       "file_a.txt": "3"
@@ -31,8 +30,7 @@ commands:
 - branch: feature2
 
 # `git rebase master` caused the history to split
-- reset:
-    label: master
+- reset: master
 - tree:
     tracked:
       "file_a.txt": "3"

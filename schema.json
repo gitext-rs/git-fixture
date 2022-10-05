@@ -81,7 +81,7 @@
           ],
           "properties": {
             "reset": {
-              "$ref": "#/definitions/Reference"
+              "type": "string"
             }
           },
           "additionalProperties": false
@@ -129,46 +129,6 @@
           ],
           "properties": {
             "tag": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "Reference": {
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "branch"
-          ],
-          "properties": {
-            "branch": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "tag"
-          ],
-          "properties": {
-            "tag": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "label"
-          ],
-          "properties": {
-            "label": {
               "type": "string"
             }
           },
@@ -229,7 +189,7 @@
         "base": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Reference"
+            "type": "string"
           }
         },
         "message": {
