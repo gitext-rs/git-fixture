@@ -2,7 +2,7 @@
 fn assert_success(name: &str) {
     let path = std::path::PathBuf::from(format!("tests/fixtures/{name}.yml"));
 
-    let dag = git_fixture::Dag::load(&path).unwrap();
+    let dag = git_fixture::TodoList::load(&path).unwrap();
 
     let tmpdir = std::path::Path::new(std::env!("CARGO_TARGET_TMPDIR"));
     let sandbox = tmpdir.join("test").join("case").join(name);

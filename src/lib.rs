@@ -6,7 +6,7 @@ use assert_cmd::output::OutputOkExt;
 use bstr::ByteSlice;
 use eyre::WrapErr;
 
-impl Dag {
+impl TodoList {
     pub fn load(path: &std::path::Path) -> eyre::Result<Self> {
         let data = std::fs::read_to_string(path)
             .wrap_err_with(|| format!("Could not read {}", path.display()))?;

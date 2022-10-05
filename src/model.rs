@@ -1,7 +1,7 @@
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 #[serde(deny_unknown_fields)]
-pub struct Dag {
+pub struct TodoList {
     #[serde(default = "init_default")]
     pub init: bool,
     #[serde(default)]
@@ -18,7 +18,7 @@ fn init_default() -> bool {
     true
 }
 
-impl Default for Dag {
+impl Default for TodoList {
     fn default() -> Self {
         Self {
             init: init_default(),

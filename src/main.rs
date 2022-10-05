@@ -33,11 +33,11 @@ fn run() -> proc_exit::ExitResult {
 
     if let Some(input) = args.input.as_deref() {
         std::fs::create_dir_all(&output)?;
-        let mut dag = git_fixture::Dag::load(input).with_code(proc_exit::Code::CONFIG_ERR)?;
+        let mut dag = git_fixture::TodoList::load(input).with_code(proc_exit::Code::CONFIG_ERR)?;
         dag.sleep = dag.sleep.or_else(|| args.sleep.map(|s| s.into()));
         dag.run(&output).with_code(proc_exit::Code::FAILURE)?;
     } else if let Some(schema_path) = args.schema.as_deref() {
-        let schema = schemars::schema_for!(git_fixture::Dag);
+        let schema = schemars::schema_for!(git_fixture::TodoList);
         let schema = serde_json::to_string_pretty(&schema).unwrap();
         if schema_path == std::path::Path::new("-") {
             std::io::stdout().write_all(schema.as_bytes())?;
