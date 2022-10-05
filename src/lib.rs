@@ -79,7 +79,7 @@ impl TodoList {
             .ok()
             .and_then(|r| r.target());
         let mut labels: std::collections::HashMap<Label, git2::Oid> = Default::default();
-        for event in self.commands.iter() {
+        for (i, event) in self.commands.iter().enumerate() {
             match event {
                 Command::Label(label) => {
                     let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
@@ -110,14 +110,17 @@ impl TodoList {
                         } else {
                             repo.signature()?
                         };
-                    let message = tree.message.as_deref().unwrap_or("Automated");
+                    let message = tree
+                        .message
+                        .clone()
+                        .unwrap_or_else(|| format!("Commit (command {i})"));
                     let mut parents = Vec::new();
                     if let Some(last_oid) = last_oid {
                         parents.push(repo.find_commit(last_oid)?);
                     }
                     let parents = parents.iter().collect::<Vec<_>>();
                     let current_oid =
-                        repo.commit(None, &sig, &sig, message, &new_tree, &parents)?;
+                        repo.commit(None, &sig, &sig, &message, &new_tree, &parents)?;
                     last_oid = Some(current_oid);
 
                     if let Some(sleep) = self.sleep {
@@ -169,11 +172,21 @@ impl TodoList {
                         } else {
                             repo.signature()?
                         };
-                    let message = merge.message.as_deref().unwrap_or("Automated");
+                    let message = merge.message.clone().unwrap_or_else(|| {
+                        format!(
+                            "Merged {} (command {i})",
+                            merge
+                                .base
+                                .iter()
+                                .map(|s| s.as_str())
+                                .collect::<Vec<_>>()
+                                .join(" "),
+                        )
+                    });
                     let ours_tree = repo.find_tree(ours_tree_oid)?;
                     let parents = parents.iter().collect::<Vec<_>>();
                     let current_oid =
-                        repo.commit(None, &sig, &sig, message, &ours_tree, &parents)?;
+                        repo.commit(None, &sig, &sig, &message, &ours_tree, &parents)?;
                     last_oid = Some(current_oid);
 
                     if let Some(sleep) = self.sleep {
@@ -195,8 +208,8 @@ impl TodoList {
                     } else {
                         repo.signature()?
                     };
-                    let message = "Automated";
-                    repo.tag(tag.as_str(), commit.as_object(), &sig, message, true)?;
+                    let message = format!("Tag (command {i})");
+                    repo.tag(tag.as_str(), commit.as_object(), &sig, &message, true)?;
                 }
                 Command::Head => {
                     let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
