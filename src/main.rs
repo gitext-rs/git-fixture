@@ -1,5 +1,3 @@
-use std::io::Write;
-
 use clap::Parser;
 use proc_exit::WithCodeResultExt;
 
@@ -36,13 +34,22 @@ fn run() -> proc_exit::ExitResult {
         let mut dag = git_fixture::TodoList::load(input).with_code(proc_exit::Code::CONFIG_ERR)?;
         dag.sleep = dag.sleep.or_else(|| args.sleep.map(|s| s.into()));
         dag.run(&output).with_code(proc_exit::Code::FAILURE)?;
-    } else if let Some(schema_path) = args.schema.as_deref() {
-        let schema = schemars::schema_for!(git_fixture::TodoList);
-        let schema = serde_json::to_string_pretty(&schema).unwrap();
-        if schema_path == std::path::Path::new("-") {
-            std::io::stdout().write_all(schema.as_bytes())?;
-        } else {
-            std::fs::write(&schema_path, &schema).with_code(proc_exit::Code::FAILURE)?;
+    } else if let Some(_schema_path) = args.schema.as_deref() {
+        #[cfg(feature = "schema")]
+        {
+            use std::io::Write;
+
+            let schema = schemars::schema_for!(git_fixture::TodoList);
+            let schema = serde_json::to_string_pretty(&schema).unwrap();
+            if _schema_path == std::path::Path::new("-") {
+                std::io::stdout().write_all(schema.as_bytes())?;
+            } else {
+                std::fs::write(&_schema_path, &schema).with_code(proc_exit::Code::FAILURE)?;
+            }
+        }
+        #[cfg(not(feature = "schema"))]
+        {
+            return Err(eyre::eyre!("schema is unsupported")).with_code(proc_exit::Code::FAILURE);
         }
     }
     Ok(())

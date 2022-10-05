@@ -1,16 +1,24 @@
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct TodoList {
-    #[serde(default = "init_default")]
+    #[cfg_attr(feature = "serde", serde(default = "init_default"))]
     pub init: bool,
-    #[serde(default)]
-    #[serde(serialize_with = "humantime_serde::serialize")]
-    #[serde(deserialize_with = "humantime_serde::deserialize")]
+    #[cfg_attr(feature = "serde", serde(default))]
+    #[cfg_attr(
+        feature = "serde",
+        serde(serialize_with = "humantime_serde::serialize")
+    )]
+    #[cfg_attr(
+        feature = "serde",
+        serde(deserialize_with = "humantime_serde::deserialize")
+    )]
     pub sleep: Option<std::time::Duration>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub author: Option<String>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub commands: Vec<Command>,
 }
 
@@ -29,11 +37,11 @@ impl Default for TodoList {
     }
 }
 
-#[derive(
-    Clone, Debug, serde::Serialize, serde::Deserialize, derive_more::IsVariant, schemars::JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, derive_more::IsVariant)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub enum Command {
     Label(Label),
     Reset(Reference),
@@ -50,23 +58,25 @@ impl From<Tree> for Command {
     }
 }
 
-#[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
+#[derive(Default, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct Tree {
     pub tracked: std::collections::HashMap<std::path::PathBuf, FileContent>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub message: Option<String>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub author: Option<String>,
 }
 
-#[derive(
-    Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema, derive_more::IsVariant,
-)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, derive_more::IsVariant)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(untagged))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub enum FileContent {
     Binary(Vec<u8>),
     Text(String),
@@ -99,22 +109,24 @@ impl<'d> From<&'d str> for FileContent {
     }
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct Merge {
     pub base: Vec<Reference>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub message: Option<String>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub author: Option<String>,
 }
 
-#[derive(
-    Clone, Debug, serde::Serialize, serde::Deserialize, derive_more::IsVariant, schemars::JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, derive_more::IsVariant)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub enum Reference {
     Branch(Branch),
     Tag(Tag),
@@ -139,19 +151,10 @@ impl From<Label> for Reference {
     }
 }
 
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-)]
-#[serde(transparent)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Label(String);
 
 impl Label {
@@ -192,19 +195,10 @@ impl std::borrow::Borrow<str> for Label {
     }
 }
 
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-)]
-#[serde(transparent)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Branch(String);
 
 impl Branch {
@@ -245,19 +239,10 @@ impl std::borrow::Borrow<str> for Branch {
     }
 }
 
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-)]
-#[serde(transparent)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Tag(String);
 
 impl Tag {

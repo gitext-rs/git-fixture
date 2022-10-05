@@ -1,3 +1,5 @@
+#![cfg(feature = "yaml")]
+
 #[track_caller]
 fn assert_success(name: &str) {
     let path = std::path::PathBuf::from(format!("tests/fixtures/{name}.yml"));

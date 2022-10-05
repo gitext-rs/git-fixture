@@ -8,47 +8,62 @@ use eyre::WrapErr;
 
 impl TodoList {
     pub fn load(path: &std::path::Path) -> eyre::Result<Self> {
-        let data = std::fs::read_to_string(path)
-            .wrap_err_with(|| format!("Could not read {}", path.display()))?;
+        match path.extension().and_then(std::ffi::OsStr::to_str) {
+            #[cfg(feature = "yaml")]
+            Some("yaml") | Some("yml") => {
+                let data = std::fs::read_to_string(path)
+                    .wrap_err_with(|| format!("Could not read {}", path.display()))?;
 
-        let dag: Self = match path.extension().and_then(std::ffi::OsStr::to_str) {
-            Some("yaml") | Some("yml") => serde_yaml::from_str(&data)
-                .wrap_err_with(|| format!("Could not parse {}", path.display()))?,
-            Some("json") => serde_json::from_str(&data)
-                .wrap_err_with(|| format!("Could not parse {}", path.display()))?,
-            Some("toml") => toml::from_str(&data)
-                .wrap_err_with(|| format!("Could not parse {}", path.display()))?,
-            Some(other) => {
-                return Err(eyre::eyre!("Unknown extension: {:?}", other));
+                serde_yaml::from_str(&data)
+                    .wrap_err_with(|| format!("Could not parse {}", path.display()))
             }
-            None => {
-                return Err(eyre::eyre!("No extension for {}", path.display()));
-            }
-        };
+            #[cfg(feature = "json")]
+            Some("json") => {
+                let data = std::fs::read_to_string(path)
+                    .wrap_err_with(|| format!("Could not read {}", path.display()))?;
 
-        Ok(dag)
+                serde_json::from_str(&data)
+                    .wrap_err_with(|| format!("Could not parse {}", path.display()))
+            }
+            #[cfg(feature = "toml")]
+            Some("toml") => {
+                let data = std::fs::read_to_string(path)
+                    .wrap_err_with(|| format!("Could not read {}", path.display()))?;
+
+                toml::from_str(&data)
+                    .wrap_err_with(|| format!("Could not parse {}", path.display()))
+            }
+            Some(other) => Err(eyre::eyre!("Unknown extension: {:?}", other)),
+            None => Err(eyre::eyre!("No extension for {}", path.display())),
+        }
     }
 
     pub fn save(&self, path: &std::path::Path) -> eyre::Result<()> {
-        let raw: String = match path.extension().and_then(std::ffi::OsStr::to_str) {
-            Some("yaml") | Some("yml") => serde_yaml::to_string(self)
-                .wrap_err_with(|| format!("Could not parse {}", path.display()))?,
-            Some("json") => serde_json::to_string(self)
-                .wrap_err_with(|| format!("Could not parse {}", path.display()))?,
-            Some("toml") => toml::to_string(self)
-                .wrap_err_with(|| format!("Could not parse {}", path.display()))?,
-            Some(other) => {
-                return Err(eyre::eyre!("Unknown extension: {:?}", other));
+        match path.extension().and_then(std::ffi::OsStr::to_str) {
+            #[cfg(feature = "yaml")]
+            Some("yaml") | Some("yml") => {
+                let raw = serde_yaml::to_string(self)
+                    .wrap_err_with(|| format!("Could not parse {}", path.display()))?;
+                std::fs::write(path, &raw)
+                    .wrap_err_with(|| format!("Could not write {}", path.display()))
             }
-            None => {
-                return Err(eyre::eyre!("No extension for {}", path.display()));
+            #[cfg(feature = "json")]
+            Some("json") => {
+                let raw = serde_json::to_string(self)
+                    .wrap_err_with(|| format!("Could not parse {}", path.display()))?;
+                std::fs::write(path, &raw)
+                    .wrap_err_with(|| format!("Could not write {}", path.display()))
             }
-        };
-
-        std::fs::write(path, &raw)
-            .wrap_err_with(|| format!("Could not write {}", path.display()))?;
-
-        Ok(())
+            #[cfg(feature = "toml")]
+            Some("toml") => {
+                let raw = toml::to_string(self)
+                    .wrap_err_with(|| format!("Could not parse {}", path.display()))?;
+                std::fs::write(path, &raw)
+                    .wrap_err_with(|| format!("Could not write {}", path.display()))
+            }
+            Some(other) => Err(eyre::eyre!("Unknown extension: {:?}", other)),
+            None => Err(eyre::eyre!("No extension for {}", path.display())),
+        }
     }
 
     pub fn run(self, cwd: &std::path::Path) -> eyre::Result<()> {
