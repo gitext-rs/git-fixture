@@ -1,6 +1,11 @@
 #[track_caller]
 fn assert_success(path: impl AsRef<std::path::Path>) {
-    git_fixture::Dag::load(path.as_ref()).unwrap();
+    let dag = git_fixture::Dag::load(path.as_ref()).unwrap();
+
+    let sandbox = snapbox::path::PathFixture::mutable_temp().unwrap();
+    dag.run(sandbox.path().unwrap()).unwrap();
+
+    sandbox.close().unwrap();
 }
 
 #[test]
