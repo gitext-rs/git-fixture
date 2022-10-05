@@ -23,6 +23,8 @@ fn main() {
 }
 
 fn run() -> proc_exit::ExitResult {
+    env_logger::init();
+
     let args = Args::parse();
     let output = args
         .output

@@ -2,8 +2,7 @@ mod model;
 
 pub use model::*;
 
-use assert_cmd::output::OutputOkExt;
-use bstr::ByteSlice;
+#[allow(unused_imports)] // Not bothering matching the right features
 use eyre::WrapErr;
 
 impl TodoList {
@@ -67,158 +66,188 @@ impl TodoList {
     }
 
     pub fn run(self, cwd: &std::path::Path) -> eyre::Result<()> {
-        if self.init {
-            std::process::Command::new("git")
-                .arg("init")
-                .current_dir(cwd)
-                .ok()
-                .wrap_err("'git init' failed")?;
-        }
+        let repo = if self.init {
+            git2::Repository::init(cwd)?
+        } else {
+            git2::Repository::open(cwd)?
+        };
 
         let mut head = None;
-        let mut labels: std::collections::HashMap<Label, String> = Default::default();
+        let mut last_oid = repo
+            .head()
+            .and_then(|h| h.resolve())
+            .ok()
+            .and_then(|r| r.target());
+        let mut labels: std::collections::HashMap<Label, git2::Oid> = Default::default();
         for event in self.commands.iter() {
             match event {
                 Command::Label(label) => {
-                    let commit = current_oid(cwd)?;
-                    labels.insert(label.clone(), commit);
+                    let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
+                    log::trace!("label {}  # {}", label, current_oid);
+                    labels.insert(label.clone(), current_oid);
                 }
                 Command::Reset(label) => {
-                    let revspec = labels
+                    let current_oid = *labels
                         .get(label.as_str())
-                        .ok_or_else(|| eyre::eyre!("Label doesn't exist: {:?}", label))?
-                        .as_str();
-                    checkout(cwd, revspec)?;
+                        .ok_or_else(|| eyre::eyre!("Label doesn't exist: {:?}", label))?;
+                    log::trace!("reset {}  # {}", label, current_oid);
+                    last_oid = Some(current_oid);
                 }
                 Command::Tree(tree) => {
-                    let output = std::process::Command::new("git")
-                        .arg("ls-files")
-                        .current_dir(cwd)
-                        .ok()?;
-                    for relpath in output.stdout.lines() {
-                        let relpath = std::path::Path::new(relpath.to_os_str()?);
-                        std::process::Command::new("git")
-                            .arg("rm")
-                            .arg("-f")
-                            .arg(relpath)
-                            .current_dir(cwd)
-                            .ok()
-                            .wrap_err_with(|| format!("Failed to remove {}", relpath.display()))?;
-                    }
+                    let mut builder = repo.treebuilder(None)?;
                     for (relpath, content) in tree.files.iter() {
-                        let path = cwd.join(relpath);
-                        if let Some(parent) = path.parent() {
-                            std::fs::create_dir_all(parent).wrap_err_with(|| {
-                                format!("Failed to create {}", parent.display())
-                            })?;
-                        }
-                        std::fs::write(&path, content.as_bytes())
-                            .wrap_err_with(|| format!("Failed to write {}", path.display()))?;
-                        std::process::Command::new("git")
-                            .arg("add")
-                            .arg(relpath)
-                            .current_dir(cwd)
-                            .ok()?;
+                        let relpath = path2bytes(relpath);
+                        let blob_id = repo.blob(content.as_bytes())?;
+                        let mode = 0o100755;
+                        builder.insert(relpath, blob_id, mode)?;
                     }
-                    // Detach
-                    if let Ok(pre_commit) = current_oid(cwd) {
-                        checkout(cwd, &pre_commit)?;
-                    }
+                    let new_tree_oid = builder.write()?;
+                    let new_tree = repo.find_tree(new_tree_oid)?;
 
-                    let mut p = std::process::Command::new("git");
-                    p.arg("commit")
-                        .arg("-m")
-                        .arg(tree.message.as_deref().unwrap_or("Automated"))
-                        .current_dir(cwd);
-                    if let Some(author) = tree.author.as_deref().or_else(|| self.author.as_deref())
-                    {
-                        p.arg("--author").arg(author);
+                    let sig =
+                        if let Some(author) = tree.author.as_deref().or(self.author.as_deref()) {
+                            git2::Signature::now(author, "")?
+                        } else {
+                            repo.signature()?
+                        };
+                    let message = tree.message.as_deref().unwrap_or("Automated");
+                    let mut parents = Vec::new();
+                    if let Some(last_oid) = last_oid {
+                        parents.push(repo.find_commit(last_oid)?);
                     }
-                    p.ok()?;
+                    let parents = parents.iter().collect::<Vec<_>>();
+                    let current_oid =
+                        repo.commit(None, &sig, &sig, message, &new_tree, &parents)?;
+                    last_oid = Some(current_oid);
+
                     if let Some(sleep) = self.sleep {
                         std::thread::sleep(sleep);
                     }
                 }
                 Command::Merge(merge) => {
-                    let mut p = std::process::Command::new("git");
-                    p.arg("merge")
-                        .arg(merge.message.as_deref().unwrap_or("Automated"))
-                        .current_dir(cwd);
-                    if let Some(author) = merge.author.as_deref().or_else(|| self.author.as_deref())
-                    {
-                        p.arg("--author").arg(author);
+                    let ours_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
+                    log::trace!(
+                        "merge {}  # {}",
+                        merge
+                            .base
+                            .iter()
+                            .map(|s| s.as_str())
+                            .collect::<Vec<_>>()
+                            .join(" "),
+                        ours_oid
+                    );
+                    let mut parents = Vec::new();
+
+                    let ours_commit = repo.find_commit(ours_oid)?;
+                    let mut ours_tree_oid = ours_commit.tree_id();
+                    parents.push(ours_commit);
+                    for label in &merge.base {
+                        let ours_tree = repo.find_tree(ours_tree_oid)?;
+
+                        let their_oid = *labels
+                            .get(label.as_str())
+                            .ok_or_else(|| eyre::eyre!("Label doesn't exist: {:?}", label))?;
+                        let their_commit = repo.find_commit(their_oid)?;
+                        let their_tree = their_commit.tree()?;
+                        parents.push(their_commit);
+
+                        let base_oid = repo.merge_base(ours_oid, their_oid)?;
+                        let base_commit = repo.find_commit(base_oid)?;
+                        let base_tree = base_commit.tree()?;
+
+                        let mut options = git2::MergeOptions::new();
+                        options.find_renames(true);
+                        options.fail_on_conflict(true);
+                        let mut index =
+                            repo.merge_trees(&base_tree, &ours_tree, &their_tree, Some(&options))?;
+                        ours_tree_oid = index.write_tree()?;
                     }
-                    for base in &merge.base {
-                        let revspec = labels
-                            .get(base.as_str())
-                            .ok_or_else(|| eyre::eyre!("Label doesn't exist: {:?}", base))?
-                            .as_str();
-                        p.arg(revspec);
-                    }
-                    p.ok()?;
+
+                    let sig =
+                        if let Some(author) = merge.author.as_deref().or(self.author.as_deref()) {
+                            git2::Signature::now(author, "")?
+                        } else {
+                            repo.signature()?
+                        };
+                    let message = merge.message.as_deref().unwrap_or("Automated");
+                    let ours_tree = repo.find_tree(ours_tree_oid)?;
+                    let parents = parents.iter().collect::<Vec<_>>();
+                    let current_oid =
+                        repo.commit(None, &sig, &sig, message, &ours_tree, &parents)?;
+                    last_oid = Some(current_oid);
+
                     if let Some(sleep) = self.sleep {
                         std::thread::sleep(sleep);
                     }
                 }
                 Command::Branch(branch) => {
-                    let _ = std::process::Command::new("git")
-                        .arg("branch")
-                        .arg("-D")
-                        .arg(branch.as_str())
-                        .current_dir(cwd)
-                        .ok();
-                    std::process::Command::new("git")
-                        .arg("checkout")
-                        .arg("-b")
-                        .arg(branch.as_str())
-                        .current_dir(cwd)
-                        .ok()?;
+                    let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
+                    log::trace!("exec git branch --force {}  # {}", branch, current_oid);
+                    let commit = repo.find_commit(current_oid)?;
+                    repo.branch(branch.as_str(), &commit, true)?;
                 }
                 Command::Tag(tag) => {
-                    let _ = std::process::Command::new("git")
-                        .arg("tag")
-                        .arg("-d")
-                        .arg(tag.as_str())
-                        .current_dir(cwd)
-                        .ok();
-                    std::process::Command::new("git")
-                        .arg("tag")
-                        .arg("-a")
-                        .arg(tag.as_str())
-                        .current_dir(cwd)
-                        .ok()?;
+                    let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
+                    log::trace!("exec git tag --force -a {}  # {}", tag, current_oid);
+                    let commit = repo.find_commit(current_oid)?;
+                    let sig = if let Some(author) = self.author.as_deref() {
+                        git2::Signature::now(author, "")?
+                    } else {
+                        repo.signature()?
+                    };
+                    let message = "Automated";
+                    repo.tag(tag.as_str(), commit.as_object(), &sig, message, true)?;
                 }
                 Command::Head => {
-                    let commit = current_oid(cwd)?;
-                    head = Some(commit);
+                    let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
+                    log::trace!("exec git checkout {}", current_oid);
+                    head = Some(AnnotatedOid::Commit(current_oid));
                 }
             }
         }
 
-        if let Some(head) = head {
-            checkout(cwd, &head)?;
+        let head = if let Some(head) = head {
+            head
+        } else {
+            let current_oid = last_oid.ok_or_else(|| eyre::eyre!("no commits yet"))?;
+            AnnotatedOid::Commit(current_oid)
+        };
+        match head {
+            AnnotatedOid::Commit(head) => {
+                repo.set_head_detached(head)?;
+            }
+            AnnotatedOid::Branch(head) => {
+                repo.set_head(&head)?;
+            }
         }
+        repo.checkout_head(None)?;
 
         Ok(())
     }
 }
 
-pub fn checkout(cwd: &std::path::Path, refspec: &str) -> eyre::Result<()> {
-    std::process::Command::new("git")
-        .arg("checkout")
-        .arg(refspec)
-        .current_dir(cwd)
-        .ok()?;
-    Ok(())
+pub enum AnnotatedOid {
+    Commit(git2::Oid),
+    Branch(String),
 }
 
-pub fn current_oid(cwd: &std::path::Path) -> eyre::Result<String> {
-    let output = std::process::Command::new("git")
-        .arg("rev-parse")
-        .arg("--short")
-        .arg("HEAD")
-        .current_dir(cwd)
-        .ok()?;
-    let commit = String::from_utf8(output.stdout)?.trim().to_owned();
-    Ok(commit)
+#[cfg(unix)]
+fn path2bytes(p: &std::path::Path) -> Vec<u8> {
+    use std::os::unix::prelude::*;
+    p.as_os_str().as_bytes().to_vec()
+}
+
+#[cfg(not(unix))]
+fn path2bytes(p: &std::path::Path) -> Vec<u8> {
+    _path2bytes_utf8(p)
+}
+
+fn _path2bytes_utf8(p: &std::path::Path) -> Vec<u8> {
+    let mut v = p.as_os_str().to_str().unwrap().as_bytes().to_vec();
+    for c in &mut v {
+        if *c == b'\\' {
+            *c = b'/'
+        }
+    }
+    v
 }
