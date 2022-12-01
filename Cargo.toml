@@ -58,4 +58,4 @@ log = "0.4.17"
 
 [dev-dependencies]
 env_logger = "0.9.1"
-snapbox = { version = "0.4.0", features = ["path"] }
+snapbox = { version = "0.4.3", features = ["path"] }
