@@ -48,7 +48,7 @@ fn run() -> proc_exit::ExitResult {
                     .write_all(schema.as_bytes())
                     .with_code(proc_exit::Code::FAILURE)?;
             } else {
-                std::fs::write(&_schema_path, &schema).with_code(proc_exit::Code::FAILURE)?;
+                std::fs::write(_schema_path, &schema).with_code(proc_exit::Code::FAILURE)?;
             }
         }
         #[cfg(not(feature = "schema"))]
