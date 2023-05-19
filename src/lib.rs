@@ -46,7 +46,7 @@ impl TodoList {
                 let raw = self
                     .to_yaml()
                     .wrap_err_with(|| format!("Could not parse {}", path.display()))?;
-                std::fs::write(path, &raw)
+                std::fs::write(path, raw)
                     .wrap_err_with(|| format!("Could not write {}", path.display()))
             }
             #[cfg(feature = "json")]
@@ -54,7 +54,7 @@ impl TodoList {
                 let raw = self
                     .to_json()
                     .wrap_err_with(|| format!("Could not parse {}", path.display()))?;
-                std::fs::write(path, &raw)
+                std::fs::write(path, raw)
                     .wrap_err_with(|| format!("Could not write {}", path.display()))
             }
             #[cfg(feature = "toml")]
@@ -62,7 +62,7 @@ impl TodoList {
                 let raw = self
                     .to_toml()
                     .wrap_err_with(|| format!("Could not parse {}", path.display()))?;
-                std::fs::write(path, &raw)
+                std::fs::write(path, raw)
                     .wrap_err_with(|| format!("Could not write {}", path.display()))
             }
             Some(other) => Err(eyre::eyre!("Unknown extension: {:?}", other)),
