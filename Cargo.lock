@@ -28,16 +28,15 @@ dependencies = [
 
 [[package]]
 name = "anstream"
-version = "0.3.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ca84f3628370c59db74ee214b3263d58f9aadd9b4fe7e711fd87dc452b7f163"
+checksum = "b1f58811cfac344940f1a400b6e6231ce35171f614f26439e80f8c1465c5cc0c"
 dependencies = [
  "anstyle 1.0.0",
  "anstyle-parse 0.2.0",
  "anstyle-query",
- "anstyle-wincon 1.0.1",
+ "anstyle-wincon 2.1.0",
  "colorchoice",
- "is-terminal",
  "utf8parse",
 ]
 
@@ -92,9 +91,9 @@ dependencies = [
 
 [[package]]
 name = "anstyle-wincon"
-version = "1.0.1"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "180abfa45703aebe0093f79badacc01b8fd4ea2e35118747e5811127f926e188"
+checksum = "58f54d10c6dfa51283a066ceab3ec1ab78d13fae00aa49243a45e4571fb79dfd"
 dependencies = [
  "anstyle 1.0.0",
  "windows-sys 0.48.0",
@@ -782,11 +781,11 @@ checksum = "420acb44afdae038210c99e69aae24109f32f15500aa708e81d46c9f29d55fcf"
 
 [[package]]
 name = "snapbox"
-version = "0.4.11"
+version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6bccd62078347f89a914e3004d94582e13824d4e3d8a816317862884c423835"
+checksum = "ad90eb3a2e3a8031d636d45bd4832751aefd58a291b553f7305a2bacae21aff3"
 dependencies = [
- "anstream 0.3.2",
+ "anstream 0.5.0",
  "anstyle 1.0.0",
  "content_inspector",
  "dunce",
@@ -800,11 +799,11 @@ dependencies = [
 
 [[package]]
 name = "snapbox-macros"
-version = "0.3.4"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eaaf09df9f0eeae82be96290918520214530e738a7fe5a351b0f24cf77c0ca31"
+checksum = "95f4ffd811b87da98d0e48285134b7847954bd76e843bb794a893b47ca3ee325"
 dependencies = [
- "anstream 0.3.2",
+ "anstream 0.5.0",
 ]
 
 [[package]]
