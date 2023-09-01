@@ -19,7 +19,7 @@ include = [
 [package]
 name = "git-fixture"
 description = "Reproducible git trees for bug reporting and testing"
-version = "0.3.3"
+version = "0.3.4"
 repository = "https://github.com/gitext-rs/git-fixture.git"
 documentation = "https://docs.rs/git-fixture"
 categories = ["command-line-interface", "development-tools"]
