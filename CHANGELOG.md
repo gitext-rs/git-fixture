@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.3.3] - 2023-09-01
+
 ### Compatibility
 
 - Update MSRV to 1.70.0
@@ -44,7 +46,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.0] - 2021-08-17
 
 <!-- next-url -->
-[Unreleased]: https://github.com/gitext-rs/git-fixture/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/gitext-rs/git-fixture/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/gitext-rs/git-fixture/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/gitext-rs/git-fixture/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/gitext-rs/git-fixture/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/gitext-rs/git-fixture/compare/v0.2.7...v0.3.0
