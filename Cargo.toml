@@ -74,3 +74,10 @@ log = "0.4.17"
 [dev-dependencies]
 env_logger = "0.10.0"
 snapbox = { version = "0.4.12", features = ["path"] }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
