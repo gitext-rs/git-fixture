@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/gitext-rs/git-fixture/branch/master/graph/badge.svg)](https://codecov.io/gh/gitext-rs/git-fixture)
 [![Documentation](https://img.shields.io/badge/docs-master-blue.svg)][Documentation]
 ![License](https://img.shields.io/crates/l/git-fixture.svg)
-[![Crates Status](https://img.shields.io/crates/v/git-fixture.svg)](https://crates.io/crates/git-fixture)
+[![Crates Status](https://img.shields.io/crates/v/git-fixture.svg)][Crates.io]
 
 Dual-licensed under [MIT](LICENSE-MIT) or [Apache 2.0](LICENSE-APACHE)
 
