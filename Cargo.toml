@@ -73,7 +73,7 @@ log = "0.4.17"
 
 [dev-dependencies]
 env_logger = "0.10.1"
-snapbox = { version = "0.4.15", features = ["path"] }
+snapbox = { version = "0.4.16", features = ["path"] }
 
 [profile.dev]
 panic = "abort"
