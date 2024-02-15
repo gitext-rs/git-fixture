@@ -8,5 +8,5 @@ fn dump_schema() {
         .arg("-")
         .assert()
         .success()
-        .stdout_eq_path("schema.json");
+        .stdout_eq(snapbox::file!["../schema.json"]);
 }
