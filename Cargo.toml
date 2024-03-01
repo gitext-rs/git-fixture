@@ -72,8 +72,8 @@ git2 = { version = ">=0.16, <=0.18", default-features = false, features = ["vend
 log = "0.4.17"
 
 [dev-dependencies]
-env_logger = "0.11.1"
-snapbox = { version = "0.5.0", features = ["path"] }
+env_logger = "0.11.2"
+snapbox = { version = "0.5.7", features = ["path"] }
 
 [profile.dev]
 panic = "abort"
