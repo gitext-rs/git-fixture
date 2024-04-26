@@ -1,4 +1,8 @@
+//! > DESCRIPTION
+
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![warn(clippy::print_stderr)]
+#![warn(clippy::print_stdout)]
 
 mod model;
 
@@ -308,7 +312,7 @@ impl std::fmt::Display for AnnotatedOid {
 
 #[cfg(unix)]
 fn path2bytes(p: &std::path::Path) -> Vec<u8> {
-    use std::os::unix::prelude::*;
+    use std::os::unix::prelude::OsStrExt;
     p.as_os_str().as_bytes().to_vec()
 }
 
@@ -321,7 +325,7 @@ fn _path2bytes_utf8(p: &std::path::Path) -> Vec<u8> {
     let mut v = p.as_os_str().to_str().unwrap().as_bytes().to_vec();
     for c in &mut v {
         if *c == b'\\' {
-            *c = b'/'
+            *c = b'/';
         }
     }
     v

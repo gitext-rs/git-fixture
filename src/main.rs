@@ -66,6 +66,6 @@ mod test {
     #[test]
     fn verify_app() {
         use clap::CommandFactory;
-        Args::command().debug_assert()
+        Args::command().debug_assert();
     }
 }
