@@ -4,7 +4,7 @@
 fn assert_success(name: &str) {
     let _ = env_logger::try_init();
 
-    let path = std::path::PathBuf::from(format!("tests/fixtures/{name}.yml"));
+    let path = std::path::PathBuf::from(format!("tests/testsuite/fixtures/{name}.yml"));
 
     let dag = git_fixture::TodoList::load(&path).unwrap();
 
