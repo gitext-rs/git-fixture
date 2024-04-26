@@ -312,7 +312,7 @@ impl std::fmt::Display for AnnotatedOid {
 
 #[cfg(unix)]
 fn path2bytes(p: &std::path::Path) -> Vec<u8> {
-    use std::os::unix::prelude::OsStrExt;
+    use std::os::unix::prelude::*;
     p.as_os_str().as_bytes().to_vec()
 }
 
