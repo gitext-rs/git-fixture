@@ -143,7 +143,7 @@ log = "0.4.17"
 
 [dev-dependencies]
 env_logger = "0.11.3"
-snapbox = "0.5.14"
+snapbox = "0.6.5"
 automod = "1.0.14"
 
 [profile.dev]
