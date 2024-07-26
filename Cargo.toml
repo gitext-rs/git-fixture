@@ -144,6 +144,9 @@ env_logger = "0.11.3"
 snapbox = "0.6.5"
 automod = "1.0.14"
 
+[target.'cfg(any())'.dependencies]
+pkg-config = "0.3.26"  # HACK: bad minimal dep in libgit2-sys
+
 [profile.dev]
 panic = "abort"
 

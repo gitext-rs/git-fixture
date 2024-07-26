@@ -320,6 +320,7 @@ dependencies = [
  "humantime",
  "humantime-serde",
  "log",
+ "pkg-config",
  "proc-exit",
  "schemars",
  "serde",
