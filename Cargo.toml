@@ -5,7 +5,7 @@ resolver = "2"
 repository = "https://github.com/gitext-rs/git-fixture.git"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-rust-version = "1.74"  # MSRV
+rust-version = "1.75"  # MSRV
 include = [
   "build.rs",
   "src/**/*",
@@ -130,7 +130,7 @@ toml = { version = "0.8", optional = true }
 humantime = { version = "2", optional = true }
 humantime-serde = { version = "1", optional = true }
 bstr = { version = "1.4", features = ["serde"] }
-derive_more = "0.99.17"
+derive_more = { version = "1.0.0", features = ["is_variant"] }
 eyre = "0.6"
 schemars = { version = "0.8.12", features = ["preserve_order"], optional = true }
 clap = { version = "4.2", features = ["derive"], optional = true }
