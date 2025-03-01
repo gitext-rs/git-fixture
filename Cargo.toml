@@ -132,7 +132,7 @@ toml = { version = "0.8", optional = true }
 humantime = { version = "2", optional = true }
 humantime-serde = { version = "1", optional = true }
 bstr = { version = "1.4", features = ["serde"] }
-derive_more = { version = "1.0.0", features = ["is_variant"] }
+derive_more = { version = "2.0.0", features = ["is_variant"] }
 eyre = "0.6"
 schemars = { version = "0.8.12", features = ["preserve_order"], optional = true }
 clap = { version = "4.2", features = ["derive"], optional = true }
