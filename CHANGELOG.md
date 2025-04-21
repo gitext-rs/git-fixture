@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Internal
+
+- Update git2 version
+- Update toml version
+
 ## [0.3.4] - 2023-09-01
 
 ## [0.3.3] - 2023-09-01
