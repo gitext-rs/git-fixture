@@ -89,7 +89,7 @@ zero_sized_map_values = "warn"
 [package]
 name = "git-fixture"
 description = "Reproducible git trees for bug reporting and testing"
-version = "0.3.4"
+version = "0.3.5"
 documentation = "https://docs.rs/git-fixture"
 categories = ["command-line-interface", "development-tools"]
 keywords = ["git", "cli"]
