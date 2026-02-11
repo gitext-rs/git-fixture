@@ -97,7 +97,7 @@ lto = true
 [package]
 name = "git-fixture"
 description = "Reproducible git trees for bug reporting and testing"
-version = "0.3.6"
+version = "1.0.0"
 documentation = "https://docs.rs/git-fixture"
 categories = ["command-line-interface", "development-tools"]
 keywords = ["git", "cli"]
