@@ -151,7 +151,7 @@ log = "0.4.17"
 
 [dev-dependencies]
 env_logger = "0.11.3"
-snapbox = "0.6.5"
+snapbox = "1.0.0"
 automod = "1.0.14"
 
 [target.'cfg(any())'.dependencies]
