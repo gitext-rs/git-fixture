@@ -321,7 +321,7 @@ dependencies = [
 
 [[package]]
 name = "git-fixture"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "automod",
  "bstr",
