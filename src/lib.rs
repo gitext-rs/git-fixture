@@ -12,7 +12,7 @@ mod model;
 
 pub use model::*;
 
-#[allow(unused_imports)] // Not bothering matching the right features
+#[allow(unused_imports, reason = "not bothering matching the right features")]
 use eyre::WrapErr;
 
 impl TodoList {
